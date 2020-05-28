@@ -14,6 +14,7 @@ const App = () => {
     radian: true,
   }
 
+  
   const [state, dispatch] = React.useReducer(reducer, initialState)
   const [historyOpen, setHistoryOpen] = React.useState(false)
   const [slideUp, setSlideUp] = React.useState(false)
