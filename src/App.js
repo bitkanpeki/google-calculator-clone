@@ -14,12 +14,12 @@ const App = () => {
     radian: true,
   }
 
-  const [state, dispatch] = React.useReducer(reducer, initialState)
-  const [historyOpen, setHistoryOpen] = React.useState(false)
-  const [slideUp, setSlideUp] = React.useState(false)
-  const [expand, setExpand] = React.useState(false)
-  const [screenFocus, setScreenFocus] = React.useState(false)
-  const [inv, setInv] = React.useState(false)
+  const [state, dispatch] = React.useReducer(reducer, initialState),
+    [historyOpen, setHistoryOpen] = React.useState(false),
+    [slideUp, setSlideUp] = React.useState(false),
+    [expand, setExpand] = React.useState(false),
+    [screenFocus, setScreenFocus] = React.useState(false),
+    [inv, setInv] = React.useState(false)
 
   return (
     <div className='app'>

@@ -8,7 +8,7 @@ const postfix = (expression) => {
     '÷': 3,
     E: 3,
     unary: 4,
-    '□': 5,
+    '^': 5,
     '%': 6,
     '√': 6,
     '!': 6,
@@ -34,7 +34,7 @@ const postfix = (expression) => {
     'ln',
     'log',
   ]
-  const operators = ['+', '-', '×', '÷', '□', 'E']
+  const operators = ['+', '-', '×', '÷', '^', 'E']
   const stack = []
   const postfix = []
 
@@ -93,7 +93,7 @@ const postfix = (expression) => {
     if (token in ops) {
       while (
         ops[last(stack)] > ops[token] ||
-        (ops[last(stack)] >= ops[token] && token !== '□')
+        (ops[last(stack)] >= ops[token] && token !== '^')
       )
         postfix.push(stack.pop())
       stack.push(token)

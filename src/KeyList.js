@@ -38,18 +38,18 @@ const KeyList = ({
 
       case 'ePowerX':
         dispatch({ type: 'ADD', payload: 'e' })
-        dispatch({ type: 'ADD', payload: '□' })
+        dispatch({ type: 'ADD', payload: '^' })
         setInv(false)
         break
 
       case 'tenPowerX':
         dispatch({ type: 'ADD', payload: '10' })
-        dispatch({ type: 'ADD', payload: '□' })
+        dispatch({ type: 'ADD', payload: '^' })
         setInv(false)
         break
 
       case 'exponentTwo':
-        dispatch({ type: 'ADD', payload: '□' })
+        dispatch({ type: 'ADD', payload: '^' })
         dispatch({ type: 'ADD', payload: '2' })
         setInv(false)
         break
@@ -223,7 +223,7 @@ const KeyList = ({
           <sup className='btn--sup'>y</sup>√x
         </button>
       ) : (
-        <button className='btn btn--dark' onClick={keyPress('□')}>
+        <button className='btn btn--dark' onClick={keyPress('^')}>
           x<sup className='btn--sup'>y</sup>
         </button>
       )}

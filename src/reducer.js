@@ -75,7 +75,7 @@ const reducer = (state, action) => {
     case 'EQUAL':
       if (state.totalShowing) return state
 
-      if (/^[+\-×÷□(E]$/.test(last(se))) return state
+      if (/^[+\-×÷^(E]$/.test(last(se))) return state
 
       const expressionWithParentheses = se.concat(fillClosingParens(se))
       const total = Number(
@@ -179,7 +179,7 @@ const reducer = (state, action) => {
             last(se) === '×' ||
             last(se) === '-' ||
             last(se) === '+' ||
-            last(se) === '□'
+            last(se) === '^'
           ) {
             return [...se.slice(0, -1), 'fracExp']
           }
@@ -191,7 +191,7 @@ const reducer = (state, action) => {
           ap === '+' ||
           ap === '×' ||
           ap === '÷' ||
-          ap === '□' ||
+          ap === '^' ||
           ap === '%' ||
           ap === '!' ||
           ap === 'fracExp'
@@ -201,7 +201,7 @@ const reducer = (state, action) => {
 
           if (se.length === 1 && last(se) === '-') return se
 
-          if (/^[+\-×÷□]$/.test(last(se)) || last(se) === 'fracExp')
+          if (/^[+\-×÷^]$/.test(last(se)) || last(se) === 'fracExp')
             return [...se.slice(0, -1), ap]
 
           if (last(se) === '(' || last(se) === 'E') return se

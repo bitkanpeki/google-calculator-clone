@@ -83,7 +83,7 @@ const evaluate = (postfix, radian, history) => {
           case '÷':
             stack.push(left / right)
             break
-          case '□':
+          case '^':
             stack.push(Math.pow(left, right))
             break
           case '%':

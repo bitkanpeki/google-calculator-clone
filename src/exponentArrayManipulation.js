@@ -1,7 +1,7 @@
 import { last, isNumeric } from './utilities'
 
 export const convertStringValuesToObjects = (expression) => {
-  const operators = ['+', '-', '×', '÷', '□', '(']
+  const operators = ['+', '-', '×', '÷', '^', '(']
   let convertedExpression = []
   let base = []
 
@@ -24,7 +24,7 @@ export const convertStringValuesToObjects = (expression) => {
         convertedExpression = [
           ...convertedExpression,
           { value: '' },
-          { value: '□', show: true },
+          { value: '^', show: true },
           { value: '√', show: false },
           ...base,
         ]
@@ -43,7 +43,7 @@ export const convertStringValuesToObjects = (expression) => {
             expression[expIndex] !== '!' &&
             expression[expIndex] !== '%' &&
             expression[expIndex] !== 'E' &&
-            expression[expIndex] !== '□' &&
+            expression[expIndex] !== '^' &&
             expression[expIndex] !== '('
           )
             break
@@ -53,7 +53,7 @@ export const convertStringValuesToObjects = (expression) => {
         const exponent = expression
           .slice(index + 1, exponentEnd)
           .map((item, idx) => {
-            if (item === '□' && expression.length === index + 1 + idx + 1)
+            if (item === '^' && expression.length === index + 1 + idx + 1)
               return { value: item, show: true }
             return { value: item }
           })
@@ -63,14 +63,14 @@ export const convertStringValuesToObjects = (expression) => {
         convertedExpression = [
           ...convertedExpression,
           { value: '' },
-          { value: '□', show: false },
+          { value: '^', show: false },
           ...exponent,
           { value: '√', show: false },
           ...base,
         ]
         base = []
       }
-    } else if (expression[index] === '□') {
+    } else if (expression[index] === '^') {
       const show = !expression[index + 1]
 
       convertedExpression.push({ value: expression[index], show })
@@ -88,7 +88,7 @@ export const addParentId = (expression) => {
 
   return expression
     .reduce((accumulator, current, index) => {
-      if (current.value === '□') {
+      if (current.value === '^') {
         parent = index
         return [...accumulator, { ...current, id: ++index, parent }]
       }
