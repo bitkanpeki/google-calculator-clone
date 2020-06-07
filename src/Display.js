@@ -6,24 +6,21 @@ const nestSuperscript = (expression) => {
 
   for (let index = 0; index < expression.length; index++) {
     if (expression[index] === '^') {
-      // let superscriptEnd = expression.length
+      let superscriptEnd = expression.length
 
-      // for (let indexSup = index; indexSup < expression.length; indexSup++) {
-      //   if (
-      //     !isNumeric(expression[indexSup]) &&
-      //     expression[indexSup] !== '!' &&
-      //     expression[indexSup] !== '%' &&
-      //     expression[indexSup] !== 'E' &&
-      //     expression[indexSup] !== '^'
-      //   ) {
-      //     superscriptEnd = indexSup
-      //     return
-      //   }
-      // }
+      for (let indexSup = index; indexSup < superscriptEnd; indexSup++) {
+        if (
+          !isNumeric(expression[indexSup]) &&
+          expression[indexSup] !== '!' &&
+          expression[indexSup] !== '%' &&
+          expression[indexSup] !== 'E' &&
+          expression[indexSup] !== '^'
+        ) {
+          superscriptEnd = indexSup
+          break
+        }
+      }
 
-      const superscriptEndIndex = expression.indexOf('+', index),
-        superscriptEnd =
-          superscriptEndIndex > 0 ? superscriptEndIndex : expression.length
       let superscriptSubExpression = expression.slice(index, superscriptEnd)
 
       superscriptSubExpression.length === 1
@@ -70,10 +67,10 @@ const addSpaces = (expression) => {
 }
 
 const Display = ({ expression }) => {
-  const expressionNestedSuperscript = nestSuperscript(expression)
-  //expressionNestedWithSpaces = addSpaces(expressionNestedSuperscript)
+  const expressionNestedSuperscript = nestSuperscript(expression),
+    expressionNestedWithSpaces = addSpaces(expressionNestedSuperscript)
 
-  return <>{expressionNestedSuperscript}</>
+  return <>{expressionNestedWithSpaces}</>
 }
 
 export default Display
