@@ -14,7 +14,8 @@ const nestSuperscript = (expression) => {
           expression[indexSup] !== '!' &&
           expression[indexSup] !== '%' &&
           expression[indexSup] !== 'E' &&
-          expression[indexSup] !== '^'
+          expression[indexSup] !== '^' &&
+          expression[indexSup] !== '('
         ) {
           superscriptEnd = indexSup
           break
