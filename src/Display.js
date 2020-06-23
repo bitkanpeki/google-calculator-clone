@@ -1,6 +1,6 @@
 import React from 'react'
 import { v4 as uuid } from 'uuid'
-import { isNumeric } from './utilities'
+import { last, isNumeric } from './utilities'
 
 const addSpaces = (expression, index) => {
   const value = expression[index]
@@ -24,21 +24,96 @@ const addSpaces = (expression, index) => {
   return value
 }
 
-const nestSuperscript = (expression) => {
-  let superscriptNestedArray = []
+const addClosingParentheses = (arr) => {
   let arrayClosingParentheses = []
+  let newArray = []
 
-  for (let index = 0; index < expression.length; index++) {
-    if (expression[index] === '(') {
-      arrayClosingParentheses.push(
-        <span key={uuid()} style={{ color: 'rgb(204, 204, 204)' }}>
-          )
-        </span>
-      )
+  for (const value of arr) {
+    if (value === '(') {
+      arrayClosingParentheses.push('autoParen')
     }
 
-    if (expression[index] === ')') arrayClosingParentheses.pop()
+    if (value === ')') arrayClosingParentheses.pop()
 
+    newArray.push(value)
+  }
+
+  return newArray.concat(arrayClosingParentheses)
+}
+
+const convertFractionalExponent = (arr) => {
+  const operators = ['+', '-', '×', '÷', '^', '(']
+  let newArr = []
+  let base = []
+
+  for (let index = 0; index < arr.length; index++) {
+    if (arr[index] === 'fracExp') {
+      while (newArr.length) {
+        if (last(newArr) === ')' || last(newArr) === 'autoParen') {
+          while (!base.length || base[0] !== '(') {
+            base.unshift(newArr.pop())
+          }
+          break
+        }
+
+        if (operators.includes(last(newArr))) break
+
+        base.push(newArr.pop())
+      }
+
+      let exponentEnd
+
+      if (arr[index + 1] === ')' || arr[index + 1] === 'autoParen')
+        exponentEnd = index + 1
+      else if (isNumeric(arr[index + 1])) {
+        exponentEnd = index + 2
+      } else {
+        let openedParentheses = 0
+
+        for (
+          let indexExponent = index;
+          indexExponent < arr.length;
+          indexExponent++
+        ) {
+          if (arr[indexExponent] === '(') openedParentheses += 1
+
+          if (
+            arr[indexExponent] === ')' ||
+            arr[indexExponent] === 'autoParen'
+          ) {
+            openedParentheses -= 1
+
+            if (openedParentheses === 0) {
+              exponentEnd = indexExponent + 1
+              break
+            }
+          }
+        }
+      }
+
+      const exponent = arr.slice(index + 1, exponentEnd)
+
+      console.log(exponent)
+
+      index += exponent.length
+
+      const recurseExponent = convertFractionalExponent(exponent)
+
+      newArr = [...newArr, '^', ...recurseExponent, '√', ...base]
+
+      base = []
+    } else {
+      newArr.push(arr[index])
+    }
+  }
+
+  return newArr
+}
+
+const nestSuperscript = (expression) => {
+  let superscriptNestedArray = []
+
+  for (let index = 0; index < expression.length; index++) {
     if (expression[index] === '^') {
       const slicedExp = expression.slice(index)
 
@@ -47,14 +122,14 @@ const nestSuperscript = (expression) => {
       if (slicedExp[1] === '(') {
         let openedParentheses = 0
 
-        for (const [index, value] of slicedExp.entries()) {
+        for (const [indexParenthese, value] of slicedExp.entries()) {
           if (value === '(') openedParentheses += 1
 
-          if (value === ')') {
+          if (value === ')' || value === 'autoParen') {
             openedParentheses -= 1
 
             if (openedParentheses === 0) {
-              superscriptEnd = index + 1
+              superscriptEnd = indexParenthese + 1
               break
             }
           }
@@ -91,6 +166,18 @@ const nestSuperscript = (expression) => {
 
       index += superscriptSubExpression.length - 1
 
+      // const withChangedParentheses = superscriptSubExpression.map((value) => {
+      //   if (value === 'autoParen') {
+      //     return (
+      //       <span key={uuid()} style={{ color: 'rgb(204, 204, 204)' }}>
+      //         )
+      //       </span>
+      //     )
+      //   }
+
+      //   return value
+      // })
+
       superscriptNestedArray.push(
         <sup key={uuid()}>{nestSuperscript(superscriptSubExpression)}</sup>
       )
@@ -101,9 +188,13 @@ const nestSuperscript = (expression) => {
     superscriptNestedArray.push(addSpaces(expression, index))
   }
 
-  return superscriptNestedArray.concat(arrayClosingParentheses)
+  return superscriptNestedArray
 }
 
-const Display = ({ expression }) => nestSuperscript(expression)
+const Display = ({ expression }) => {
+  return nestSuperscript(
+    convertFractionalExponent(addClosingParentheses(expression))
+  )
+}
 
 export default Display
