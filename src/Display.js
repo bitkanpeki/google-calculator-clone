@@ -2,6 +2,10 @@ import React from 'react'
 import { v4 as uuid } from 'uuid'
 import { last, isNumeric } from './utilities'
 
+const ClosingParenthese = () => (
+  <span style={{ color: 'rgb(204, 204, 204)' }}>)</span>
+)
+
 const addSpaces = (expression, index) => {
   const value = expression[index]
 
@@ -15,7 +19,7 @@ const addSpaces = (expression, index) => {
       value === 'arcsin' ||
       value === 'arccos' ||
       value === 'arctan' ||
-      value === '√' ||
+      //value === '√' ||
       value === 'ln' ||
       value === 'log')
   )
@@ -30,7 +34,7 @@ const addClosingParentheses = (arr) => {
 
   for (const value of arr) {
     if (value === '(') {
-      arrayClosingParentheses.push('autoParen')
+      arrayClosingParentheses.push(<ClosingParenthese key={uuid()} />)
     }
 
     if (value === ')') arrayClosingParentheses.pop()
@@ -42,14 +46,15 @@ const addClosingParentheses = (arr) => {
 }
 
 const convertFractionalExponent = (arr) => {
-  const operators = ['+', '-', '×', '÷', '^', '(']
+  const operators = ['+', '-', '×', '÷']
+
   let newArr = []
   let base = []
 
   for (let index = 0; index < arr.length; index++) {
     if (arr[index] === 'fracExp') {
       while (newArr.length) {
-        if (last(newArr) === ')' || last(newArr) === 'autoParen') {
+        if (last(newArr) === ')') {
           while (!base.length || base[0] !== '(') {
             base.unshift(newArr.pop())
           }
@@ -62,44 +67,54 @@ const convertFractionalExponent = (arr) => {
       }
 
       let exponentEnd
+      let openedParentheses = 0
 
-      if (arr[index + 1] === ')' || arr[index + 1] === 'autoParen')
-        exponentEnd = index + 1
-      else if (isNumeric(arr[index + 1])) {
-        exponentEnd = index + 2
-      } else {
-        let openedParentheses = 0
+      for (
+        let indexExponent = index;
+        indexExponent < arr.length;
+        indexExponent++
+      ) {
+        if (arr[index + 1] === '(') {
+          if (arr[indexExponent + 1] === '(') openedParentheses += 1
 
-        for (
-          let indexExponent = index;
-          indexExponent < arr.length;
-          indexExponent++
-        ) {
-          if (arr[indexExponent] === '(') openedParentheses += 1
+          if (arr[indexExponent + 1] === ')') openedParentheses -= 1
 
+          if (openedParentheses === 0) {
+            exponentEnd = indexExponent + 2
+            break
+          }
+        }
+
+        if (isNumeric(arr[index + 1])) {
           if (
-            arr[indexExponent] === ')' ||
-            arr[indexExponent] === 'autoParen'
+            !isNumeric(arr[indexExponent + 1]) &&
+            arr[indexExponent + 1] !== '!' &&
+            arr[indexExponent + 1] !== '%' &&
+            arr[indexExponent + 1] !== 'E' &&
+            arr[indexExponent + 1] !== '^'
           ) {
-            openedParentheses -= 1
-
-            if (openedParentheses === 0) {
-              exponentEnd = indexExponent + 1
-              break
-            }
+            exponentEnd = indexExponent + 1
+            break
           }
         }
       }
 
-      const exponent = arr.slice(index + 1, exponentEnd)
+      let exponent = arr.slice(index + 1, exponentEnd)
 
-      console.log(exponent)
+      if (!exponent.length)
+        exponent.push(
+          <span key={uuid()} style={{ color: 'rgb(204, 204, 204)' }}>
+            □
+          </span>
+        )
 
       index += exponent.length
 
-      const recurseExponent = convertFractionalExponent(exponent)
+      const recurseExponent = (
+        <sup key={uuid()}>{convertFractionalExponent(exponent)}</sup>
+      )
 
-      newArr = [...newArr, '^', ...recurseExponent, '√', ...base]
+      newArr = [...newArr, recurseExponent, '√', ...base]
 
       base = []
     } else {
@@ -125,7 +140,7 @@ const nestSuperscript = (expression) => {
         for (const [indexParenthese, value] of slicedExp.entries()) {
           if (value === '(') openedParentheses += 1
 
-          if (value === ')' || value === 'autoParen') {
+          if (value.type === ClosingParenthese || value === ')') {
             openedParentheses -= 1
 
             if (openedParentheses === 0) {
@@ -166,18 +181,6 @@ const nestSuperscript = (expression) => {
 
       index += superscriptSubExpression.length - 1
 
-      // const withChangedParentheses = superscriptSubExpression.map((value) => {
-      //   if (value === 'autoParen') {
-      //     return (
-      //       <span key={uuid()} style={{ color: 'rgb(204, 204, 204)' }}>
-      //         )
-      //       </span>
-      //     )
-      //   }
-
-      //   return value
-      // })
-
       superscriptNestedArray.push(
         <sup key={uuid()}>{nestSuperscript(superscriptSubExpression)}</sup>
       )
@@ -192,6 +195,7 @@ const nestSuperscript = (expression) => {
 }
 
 const Display = ({ expression }) => {
+  console.log(convertFractionalExponent(addClosingParentheses(expression)))
   return nestSuperscript(
     convertFractionalExponent(addClosingParentheses(expression))
   )
