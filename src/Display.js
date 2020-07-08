@@ -6,26 +6,25 @@ const ClosingParenthese = () => (
   <span style={{ color: 'rgb(204, 204, 204)' }}>)</span>
 )
 
-const addSpaces = (expression, index) => {
-  const value = expression[index]
-
-  if (/^[+\-×÷]$/.test(value)) return ` ${value} `
-
-  if (
-    expression[index - 1] !== '(' &&
-    (value === 'sin' ||
-      value === 'cos' ||
-      value === 'tan' ||
-      value === 'arcsin' ||
-      value === 'arccos' ||
-      value === 'arctan' ||
-      //value === '√' ||
-      value === 'ln' ||
-      value === 'log')
-  )
-    return ` ${value}`
-
-  return value
+const addSpaces = (expression) => {
+  return expression.reduce((accumulator, current, index, array) => {
+    if (/^[+\-×÷]$/.test(current)) accumulator.push(` ${current} `)
+    else if (
+      array[index - 1] !== '(' &&
+      (current === 'sin' ||
+        current === 'cos' ||
+        current === 'tan' ||
+        current === 'arcsin' ||
+        current === 'arccos' ||
+        current === 'arctan' ||
+        current === '√' ||
+        current === 'ln' ||
+        current === 'log')
+    )
+      accumulator.push(` ${current}`)
+    else accumulator.push(current)
+    return accumulator
+  }, [])
 }
 
 const addClosingParentheses = (arr) => {
@@ -45,28 +44,43 @@ const addClosingParentheses = (arr) => {
   return newArray.concat(arrayClosingParentheses)
 }
 
-const convertFractionalExponent = (arr) => {
-  const operators = ['+', '-', '×', '÷']
-
-  let newArr = []
+const nest = (arr) => {
+  const operators = ['+', '-', '×', '÷'] // '(' and '^' too ?
+  const functions = [
+    'ln',
+    'log',
+    'sin',
+    'cos',
+    'tan',
+    'arcsin',
+    'arccos',
+    'arctan',
+    '√',
+  ]
+  let newNestedArray = []
   let base = []
 
   for (let index = 0; index < arr.length; index++) {
     if (arr[index] === 'fracExp') {
-      while (newArr.length) {
-        if (last(newArr) === ')') {
+      while (newNestedArray.length) {
+        if (last(newNestedArray) === ')') {
           while (!base.length || base[0] !== '(') {
-            base.unshift(newArr.pop())
+            base.unshift(newNestedArray.pop())
           }
           break
         }
 
-        if (operators.includes(last(newArr))) break
+        if (
+          last(newNestedArray) === '(' ||
+          (typeof last(newNestedArray) === 'string' &&
+            operators.includes(last(newNestedArray).trim()))
+        )
+          break
 
-        base.push(newArr.pop())
+        base.push(newNestedArray.pop())
       }
 
-      let exponentEnd
+      let exponentEnd = arr.length
       let openedParentheses = 0
 
       for (
@@ -74,32 +88,60 @@ const convertFractionalExponent = (arr) => {
         indexExponent < arr.length;
         indexExponent++
       ) {
-        if (arr[index + 1] === '(') {
-          if (arr[indexExponent + 1] === '(') openedParentheses += 1
+        if (arr[indexExponent] === '(') {
+          if (openedParentheses > 0) {
+            openedParentheses += 1
+            continue
+          }
 
-          if (arr[indexExponent + 1] === ')') openedParentheses -= 1
-
-          if (openedParentheses === 0) {
-            exponentEnd = indexExponent + 2
+          if (
+            typeof arr[indexExponent - 1] === 'string' &&
+            arr[indexExponent - 1] !== 'fracExp' &&
+            arr[indexExponent - 1] !== '^' &&
+            !functions.includes(arr[indexExponent - 1].trim())
+          ) {
+            exponentEnd = indexExponent
             break
           }
+
+          openedParentheses += 1
         }
 
-        if (isNumeric(arr[index + 1])) {
+        if (
+          arr[indexExponent] === ')' ||
+          arr[indexExponent]?.type === ClosingParenthese
+        ) {
+          if (openedParentheses === 0) exponentEnd = indexExponent
+          openedParentheses -= 1
+        }
+
+        if (openedParentheses > 0) continue
+
+        if (
+          typeof arr[indexExponent] === 'string' &&
+          functions.includes(arr[indexExponent].trim())
+        ) {
           if (
-            !isNumeric(arr[indexExponent + 1]) &&
-            arr[indexExponent + 1] !== '!' &&
-            arr[indexExponent + 1] !== '%' &&
-            arr[indexExponent + 1] !== 'E' &&
-            arr[indexExponent + 1] !== '^'
+            arr[indexExponent - 1] === 'fracExp' ||
+            arr[indexExponent - 1] === '^'
           ) {
-            exponentEnd = indexExponent + 1
-            break
-          }
+            continue
+          } else exponentEnd = indexExponent
+        }
+
+        if (
+          typeof arr[indexExponent] === 'string' &&
+          operators.includes(arr[indexExponent].trim())
+        ) {
+          exponentEnd = indexExponent
+          break
         }
       }
 
       let exponent = arr.slice(index + 1, exponentEnd)
+
+      console.log('exponent trace: ', exponent)
+      index += exponent.length
 
       if (!exponent.length)
         exponent.push(
@@ -108,30 +150,13 @@ const convertFractionalExponent = (arr) => {
           </span>
         )
 
-      index += exponent.length
+      const recurseExponent = <sup key={uuid()}>{nest(exponent)}</sup>
 
-      const recurseExponent = (
-        <sup key={uuid()}>{convertFractionalExponent(exponent)}</sup>
-      )
-
-      newArr = [...newArr, recurseExponent, '√', ...base]
+      newNestedArray = [...newNestedArray, recurseExponent, '√', ...base]
 
       base = []
-    } else {
-      newArr.push(arr[index])
-    }
-  }
-
-  return newArr
-}
-
-const nestSuperscript = (expression) => {
-  let superscriptNestedArray = []
-
-  for (let index = 0; index < expression.length; index++) {
-    if (expression[index] === '^') {
-      const slicedExp = expression.slice(index)
-
+    } else if (arr[index] === '^') {
+      const slicedExp = arr.slice(index)
       let superscriptEnd
 
       if (slicedExp[1] === '(') {
@@ -156,7 +181,8 @@ const nestSuperscript = (expression) => {
             element !== '!' &&
             element !== '%' &&
             element !== 'E' &&
-            element !== '^'
+            element !== '^' &&
+            element !== 'fracExp'
           )
         })
       }
@@ -181,24 +207,20 @@ const nestSuperscript = (expression) => {
 
       index += superscriptSubExpression.length - 1
 
-      superscriptNestedArray.push(
-        <sup key={uuid()}>{nestSuperscript(superscriptSubExpression)}</sup>
+      newNestedArray.push(
+        <sup key={uuid()}>{nest(superscriptSubExpression)}</sup>
       )
-
-      continue
+    } else {
+      newNestedArray.push(arr[index])
     }
-
-    superscriptNestedArray.push(addSpaces(expression, index))
   }
 
-  return superscriptNestedArray
+  return newNestedArray
 }
 
 const Display = ({ expression }) => {
-  console.log(convertFractionalExponent(addClosingParentheses(expression)))
-  return nestSuperscript(
-    convertFractionalExponent(addClosingParentheses(expression))
-  )
+  console.log('original :', addClosingParentheses(expression))
+  return nest(addClosingParentheses(addSpaces(expression)))
 }
 
 export default Display

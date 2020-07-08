@@ -259,7 +259,9 @@ const reducer = (state, action) => {
         }
 
         if (ap === ')') {
-          if (openParens(se) > 0 && last(se) !== '(') return [...se, ap]
+          if (openParens(se) > 0 && last(se) !== '(' && last(se) !== 'fracExp')
+            return [...se, ap]
+
           return se
         }
 
