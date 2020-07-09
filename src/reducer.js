@@ -196,7 +196,10 @@ const reducer = (state, action) => {
           ap === '!' ||
           ap === 'fracExp'
         ) {
-          if (last(se) === '-' && (last2(se) === '×' || last2(se) === '÷'))
+          if (
+            last(se) === '-' &&
+            (last2(se) === '×' || last2(se) === '÷' || last2(se) === '(')
+          )
             return se
 
           if (se.length === 1 && last(se) === '-') return se
@@ -259,7 +262,12 @@ const reducer = (state, action) => {
         }
 
         if (ap === ')') {
-          if (openParens(se) > 0 && last(se) !== '(' && last(se) !== 'fracExp')
+          if (
+            openParens(se) > 0 &&
+            last(se) !== '(' &&
+            !/^[+\-×÷^]$/.test(last(se)) &&
+            last(se) !== 'fracExp'
+          )
             return [...se, ap]
 
           return se

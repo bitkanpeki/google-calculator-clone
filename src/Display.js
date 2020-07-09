@@ -1,9 +1,13 @@
 import React from 'react'
 import { v4 as uuid } from 'uuid'
-import { last, isNumeric } from './utilities'
+import { last } from './utilities'
 
 const ClosingParenthese = () => (
   <span style={{ color: 'rgb(204, 204, 204)' }}>)</span>
+)
+
+const EmptyExponent = () => (
+  <span style={{ color: 'rgb(204, 204, 204)' }}>□</span>
 )
 
 const addSpaces = (expression) => {
@@ -45,7 +49,7 @@ const addClosingParentheses = (arr) => {
 }
 
 const nest = (arr) => {
-  const operators = ['+', '-', '×', '÷'] // '(' and '^' too ?
+  const operators = ['+', '-', '×', '÷']
   const functions = [
     'ln',
     'log',
@@ -61,7 +65,7 @@ const nest = (arr) => {
   let base = []
 
   for (let index = 0; index < arr.length; index++) {
-    if (arr[index] === 'fracExp') {
+    if (arr[index] === 'fracExp' || arr[index] === '^') {
       while (newNestedArray.length) {
         if (last(newNestedArray) === ')') {
           while (!base.length || base[0] !== '(') {
@@ -140,86 +144,24 @@ const nest = (arr) => {
 
       let exponent = arr.slice(index + 1, exponentEnd)
 
-      console.log('exponent trace: ', exponent)
-      index += exponent.length
-
-      if (!exponent.length)
-        exponent.push(
-          <span key={uuid()} style={{ color: 'rgb(204, 204, 204)' }}>
-            □
-          </span>
-        )
+      if (!exponent.length) exponent.push(<EmptyExponent key={uuid()} />)
 
       const recurseExponent = <sup key={uuid()}>{nest(exponent)}</sup>
 
-      newNestedArray = [...newNestedArray, recurseExponent, '√', ...base]
+      if (arr[index] === 'fracExp')
+        newNestedArray = [...newNestedArray, recurseExponent, '√', ...base]
 
-      base = []
-    } else if (arr[index] === '^') {
-      const slicedExp = arr.slice(index)
-      let superscriptEnd
+      if (arr[index] === '^')
+        newNestedArray = [...newNestedArray, ...base, recurseExponent]
 
-      if (slicedExp[1] === '(') {
-        let openedParentheses = 0
-
-        for (const [indexParenthese, value] of slicedExp.entries()) {
-          if (value === '(') openedParentheses += 1
-
-          if (value.type === ClosingParenthese || value === ')') {
-            openedParentheses -= 1
-
-            if (openedParentheses === 0) {
-              superscriptEnd = indexParenthese + 1
-              break
-            }
-          }
-        }
-      } else {
-        superscriptEnd = slicedExp.findIndex((element) => {
-          return (
-            !isNumeric(element) &&
-            element !== '!' &&
-            element !== '%' &&
-            element !== 'E' &&
-            element !== '^' &&
-            element !== 'fracExp'
-          )
-        })
-      }
-
-      if (superscriptEnd === -1) superscriptEnd = slicedExp.length
-
-      let superscriptSubExpression = slicedExp.slice(0, superscriptEnd)
-
-      if (superscriptSubExpression.length === 1) {
-        superscriptSubExpression[0] = (
-          <span key={uuid()} style={{ color: 'rgb(204, 204, 204)' }}>
-            □
-          </span>
-        )
-      } else {
-        superscriptSubExpression[0] = (
-          <span key={uuid()} style={{ fontSize: '0px' }}>
-            □
-          </span>
-        )
-      }
-
-      index += superscriptSubExpression.length - 1
-
-      newNestedArray.push(
-        <sup key={uuid()}>{nest(superscriptSubExpression)}</sup>
-      )
-    } else {
-      newNestedArray.push(arr[index])
-    }
+      if (exponent[0]?.type !== EmptyExponent) index += exponent.length
+    } else newNestedArray.push(arr[index])
   }
 
   return newNestedArray
 }
 
 const Display = ({ expression }) => {
-  console.log('original :', addClosingParentheses(expression))
   return nest(addClosingParentheses(addSpaces(expression)))
 }
 
