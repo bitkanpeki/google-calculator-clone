@@ -81,8 +81,10 @@ const nest = (arr) => {
         )
           break
 
-        base.push(newNestedArray.pop())
+        base.unshift(newNestedArray.pop())
       }
+
+      console.log(base)
 
       let exponentEnd = arr.length
       let openedParentheses = 0
@@ -155,6 +157,8 @@ const nest = (arr) => {
         newNestedArray = [...newNestedArray, ...base, recurseExponent]
 
       if (exponent[0]?.type !== EmptyExponent) index += exponent.length
+
+      base = []
     } else newNestedArray.push(arr[index])
   }
 
